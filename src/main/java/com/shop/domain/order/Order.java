@@ -5,6 +5,7 @@ import static com.shop.domain.order.OrderStatus.PAYMENT_PENDING;
 
 import com.shop.domain.member.Member;
 import com.shop.domain.payment.Payment;
+import com.shop.global.BaseTimeEntity;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -19,8 +20,11 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -29,27 +33,55 @@ import lombok.NoArgsConstructor;
 @Table(name = "orders")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class Order {
+public class Order extends BaseTimeEntity {
 
-    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL)
-    private final List<OrderProduct> orderProducts = new ArrayList<>();
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "order_id")
     private Long id;
+
+    @Column(nullable = false, unique = true, updatable = false)
+    private String orderNumber;
+
+    private String orderName;
+
+    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL)
+    private final List<OrderProduct> orderProducts = new ArrayList<>();
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "member_id")
     private Member member;
-    @OneToOne(mappedBy = "order", fetch = FetchType.LAZY)
+
+    private String email;
+
+    @OneToOne(mappedBy = "order")
     private Payment payment;
 
     @Enumerated(EnumType.STRING)
     private OrderStatus status;
 
+    private LocalDateTime orderDate;
+
+    private int totalAmount;
+
+    private int totalQuantity;
+
     public Order(Member member, List<OrderProduct> orderProducts) {
         this.member = member;
+        this.email = member.getEmail();
         orderProducts.forEach(this::addOrderProduct);
+        this.orderNumber = generateOrderNumber();
+        this.orderName = generateOrderName();
         this.status = OrderStatus.NEW;
+        this.orderDate = LocalDateTime.now();
+        this.totalAmount = orderProducts.stream()
+                .mapToInt(OrderProduct::getTotalPrice)
+                .sum();
+        this.totalQuantity = orderProducts.size();
+    }
+
+    private String generateOrderNumber() {
+        return "ORD-" + LocalDate.now() + "-" + UUID.randomUUID().toString().substring(0, 6).toUpperCase();
     }
 
     public void addOrderProduct(OrderProduct orderProduct) {
@@ -71,22 +103,21 @@ public class Order {
         this.status = COMPLETED;
     }
 
-    public String getOrderName() {
+    //public String getOrderName() {
+    //    if (orderProducts.size() == 1) {
+    //        return orderProducts.get(0).getProduct().getName();
+    //    } else {
+    //        return orderProducts.get(0).getProduct().getName()
+    //                + "외 " + orderProducts.size() + "건";
+    //    }
+    //}
+
+    private String generateOrderName() {
         if (orderProducts.size() == 1) {
             return orderProducts.get(0).getProduct().getName();
         } else {
             return orderProducts.get(0).getProduct().getName()
                     + "외 " + orderProducts.size() + "건";
         }
-    }
-
-    public int getTotalPrice() {
-        return orderProducts.stream()
-                .mapToInt(OrderProduct::getTotalPrice)
-                .sum();
-    }
-
-    public String getMemberEmail() {
-        return member.getEmail();
     }
 }

@@ -16,7 +16,7 @@ public class OrderPaymentInfo {
     public OrderPaymentInfo(Order order, Member member) {
         this.orderId = String.valueOf(order.getId());
         this.orderName = order.getOrderName();
-        this.totalAmount = order.getTotalPrice();
+        this.totalAmount = order.getTotalAmount();
         this.customerEmail = member.getEmail();
         this.customerName = member.getName();
     }

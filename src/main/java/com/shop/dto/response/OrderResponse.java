@@ -1,21 +1,19 @@
 package com.shop.dto.response;
 
+import com.shop.domain.order.OrderStatus;
+import java.time.LocalDateTime;
 import lombok.Builder;
 import lombok.Getter;
 
 @Getter
+@Builder
 public class OrderResponse {
 
-    private final String email;
-    private final String orderProduct;
-    private final String totalAmount;
-    private final String status;
-
-    @Builder
-    public OrderResponse(String email, String orderProduct, String totalAmount, String status) {
-        this.email = email;
-        this.orderProduct = orderProduct;
-        this.totalAmount = totalAmount;
-        this.status = status;
-    }
+    private String email;
+    private String orderNumber;
+    private String orderName;
+    private OrderStatus status;
+    private LocalDateTime orderDate;
+    private Long totalAmount;
+    private int totalQuantity;
 }

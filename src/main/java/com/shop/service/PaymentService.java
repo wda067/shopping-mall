@@ -8,17 +8,15 @@ import com.shop.dto.request.PaymentRequest;
 import com.shop.dto.response.CommonResponse;
 import com.shop.dto.response.OrderPaymentInfo;
 import com.shop.dto.response.PaymentResponse;
-import com.shop.event.OrderCompletedEvent;
 import com.shop.event.OrderEventPublisher;
 import com.shop.exception.OrderNotFound;
-import com.shop.repository.OrderRepository;
+import com.shop.repository.order.OrderRepository;
 import com.shop.repository.PaymentRepository;
 import java.util.Base64;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
