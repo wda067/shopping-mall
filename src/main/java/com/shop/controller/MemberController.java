@@ -1,6 +1,6 @@
 package com.shop.controller;
 
-import com.shop.config.auth.Login;
+import com.shop.global.auth.Login;
 import com.shop.dto.request.JoinRequest;
 import com.shop.dto.request.MemberSearch;
 import com.shop.dto.response.CommonResponse;
