@@ -17,8 +17,10 @@ spring:
       ddl-auto: update
     properties:
       hibernate:
-        show_sql: false
+        show_sql: true
         format_sql: true
+        dialect: org.hibernate.dialect.MySQL8Dialect
+    database-platform: org.hibernate.dialect.MySQL8Dialect
 
   thymeleaf:
     prefix: classpath:/templates/
@@ -30,10 +32,10 @@ spring:
       port: 6379
       password: 1234
 
-#logging.level:
-#  org.hibernate.sql: debug
-#  org.hibernate.orm.jdbc.bind: trace
-#  org.springframework.cache: debug
+logging.level:
+  org.hibernate.sql: debug
+  org.hibernate.orm.jdbc.bind: trace
+  org.springframework.cache: debug
 
 toss-payments:
   widget-secret: test_gsk_docs_OaPz8L5KdmQXkzRz3y47BMw6
