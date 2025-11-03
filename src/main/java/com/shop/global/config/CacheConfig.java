@@ -1,4 +1,4 @@
-package com.shop.config;
+package com.shop.global.config;
 
 import com.github.benmanes.caffeine.cache.Caffeine;
 import java.util.concurrent.TimeUnit;

@@ -1,4 +1,4 @@
-package com.shop.config.feign;
+package com.shop.global.feign;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 

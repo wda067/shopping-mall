@@ -1,4 +1,4 @@
-package com.shop.config.auth;
+package com.shop.global.auth;
 
 import com.shop.exception.Forbidden;
 import com.shop.exception.Unauthorized;
@@ -14,7 +14,7 @@ public class AuthInterceptor implements HandlerInterceptor {
         //현재 요청에 연관된 세션이 존재하는 경우에만 세션을 반환
         HttpSession session = request.getSession(false);
 
-        if (session == null || session.getAttribute("memberId") == null) {
+        if (session == null || session.getAttribute("email") == null) {
             throw new Unauthorized();
         }
 

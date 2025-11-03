@@ -1,6 +1,6 @@
-package com.shop.config;
+package com.shop.global.config;
 
-import com.shop.config.mdc.MdcTaskDecorator;
+import com.shop.global.mdc.MdcTaskDecorator;
 import java.util.concurrent.Executor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;

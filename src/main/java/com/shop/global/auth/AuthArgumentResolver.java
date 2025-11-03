@@ -1,4 +1,4 @@
-package com.shop.config.auth;
+package com.shop.global.auth;
 
 import com.shop.exception.Unauthorized;
 import jakarta.servlet.http.HttpServletRequest;
@@ -14,7 +14,7 @@ public class AuthArgumentResolver implements HandlerMethodArgumentResolver {
     @Override
     public boolean supportsParameter(MethodParameter parameter) {
         return parameter.hasParameterAnnotation(Login.class) &&
-                parameter.getParameterType().equals(Long.class);
+                parameter.getParameterType().equals(String.class);
     }
 
     @Override
@@ -23,10 +23,10 @@ public class AuthArgumentResolver implements HandlerMethodArgumentResolver {
         HttpServletRequest request = (HttpServletRequest) webRequest.getNativeRequest();
         HttpSession session = request.getSession(false);
 
-        if (session == null || session.getAttribute("memberId") == null) {
+        if (session == null || session.getAttribute("email") == null) {
             throw new Unauthorized();
         }
 
-        return session.getAttribute("memberId");
+        return session.getAttribute("email");
     }
 }

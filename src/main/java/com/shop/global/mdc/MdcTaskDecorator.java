@@ -1,4 +1,4 @@
-package com.shop.config.mdc;
+package com.shop.global.mdc;
 
 import java.util.Map;
 import org.slf4j.MDC;

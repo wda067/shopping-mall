@@ -1,4 +1,4 @@
-package com.shop.config.redis;
+package com.shop.global.redis;
 
 import lombok.RequiredArgsConstructor;
 import org.redisson.Redisson;

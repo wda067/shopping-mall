@@ -1,4 +1,4 @@
-package com.shop.config.mdc;
+package com.shop.global.mdc;
 
 import jakarta.servlet.Filter;
 import jakarta.servlet.FilterChain;
@@ -25,16 +25,16 @@ public class MdcFilter implements Filter {
             HttpSession session = request.getSession(false);  //세션이 없으면 null
 
             if (session != null) {
-                String memberId = session.getAttribute("memberId").toString();
+                String email = session.getAttribute("email").toString();
 
-                if (memberId != null) {  //MDC에 memberId 저장
-                    MDC.put("memberId", memberId);
+                if (email != null) {  //MDC에 email 저장
+                    MDC.put("email", email);
                 }
             }
 
             filterChain.doFilter(request, response);
         } finally {
-            MDC.remove("memberId");
+            MDC.remove("email");
         }
     }
 }

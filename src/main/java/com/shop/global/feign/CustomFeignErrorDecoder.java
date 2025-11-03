@@ -1,4 +1,4 @@
-package com.shop.config.feign;
+package com.shop.global.feign;
 
 import com.shop.exception.CustomFeignException;
 import feign.Response;

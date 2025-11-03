@@ -1,4 +1,4 @@
-package com.shop.config.auth;
+package com.shop.global.auth;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
