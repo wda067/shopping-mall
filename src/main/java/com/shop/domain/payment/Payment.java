@@ -6,6 +6,7 @@ import static lombok.AccessLevel.PROTECTED;
 import com.shop.domain.member.Member;
 import com.shop.domain.order.Order;
 import com.shop.dto.response.PaymentResponse;
+import com.shop.global.BaseTimeEntity;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -25,7 +26,7 @@ import lombok.NoArgsConstructor;
 @Entity
 @Getter
 @NoArgsConstructor(access = PROTECTED)
-public class Payment {
+public class Payment extends BaseTimeEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

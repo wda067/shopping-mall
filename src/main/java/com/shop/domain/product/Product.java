@@ -2,6 +2,7 @@ package com.shop.domain.product;
 
 import com.shop.dto.request.ProductCreate;
 import com.shop.exception.NotEnoughStock;
+import com.shop.global.BaseTimeEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -17,14 +18,13 @@ import lombok.NoArgsConstructor;
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class Product {
+public class Product extends BaseTimeEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "product_id")
     private Long id;
 
-    @Column(unique = true)
     private String name;
 
     private int price;
