@@ -1,6 +1,6 @@
 package com.shop.client;
 
-import com.shop.config.feign.TossPaymentsFeignConfig;
+import com.shop.global.feign.TossPaymentsFeignConfig;
 import com.shop.dto.request.PaymentRequest;
 import com.shop.dto.response.PaymentResponse;
 import org.springframework.cloud.openfeign.FeignClient;
