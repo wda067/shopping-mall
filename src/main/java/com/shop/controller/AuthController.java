@@ -22,7 +22,7 @@ public class AuthController {
     public void login(@RequestBody LoginRequest loginRequest, HttpServletRequest request) {
         Member member = authService.login(loginRequest);
         HttpSession session = request.getSession();
-        session.setAttribute("memberId", member.getId());
+        session.setAttribute("email", member.getEmail());
         session.setAttribute("role", member.getRole());
     }
 
