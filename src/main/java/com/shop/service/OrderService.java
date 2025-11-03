@@ -181,6 +181,18 @@ public class OrderService {
         return CommonResponse.success(page);
     }
 
+    @Scheduled(cron = "0 */3 * * * *")
+    public void refreshOrderStatistics() {
+        orderLogger.info("Starting order statistics refresh at {}", LocalDateTime.now());
+        try {
+            orderStatsRepository.refreshOrderStats();
+            orderLogger.info("Order statistics refresh at {}", LocalDateTime.now());
+        } catch (Exception e) {
+            orderLogger.error("Order statistics refresh failed", e);
+            throw e;
+        }
+    }
+
     //private OrderResponse toOrderResponse(Order order) {
     //    return OrderResponse.builder()
     //            .email(order.getMember().getEmail())
