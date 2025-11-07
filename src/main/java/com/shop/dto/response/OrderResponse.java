@@ -9,6 +9,7 @@ import lombok.Getter;
 @Builder
 public class OrderResponse {
 
+    private Long orderId;
     private String email;
     private String orderNumber;
     private String orderName;

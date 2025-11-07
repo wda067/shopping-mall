@@ -33,6 +33,7 @@ public class ProductRepositoryCustomImpl implements ProductRepositoryCustom {
         List<ProductResponse> products = queryFactory.select(
                         Projections.constructor(
                                 ProductResponse.class,
+                                product.id,
                                 product.name,
                                 product.price,
                                 product.stockQuantity,

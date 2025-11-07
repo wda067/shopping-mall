@@ -7,6 +7,7 @@ import com.shop.dto.response.ProductResponse;
 import com.shop.service.ProductService;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -35,7 +36,7 @@ public class ProductController {
     }
 
     @GetMapping("/product/list")
-    public CommonResponse<List<ProductResponse>> getList(@ModelAttribute ProductSearch request) {
+    public CommonResponse<Page<ProductResponse>> getList(@ModelAttribute ProductSearch request) {
         return productService.getList(request);
     }
 

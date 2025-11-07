@@ -5,6 +5,7 @@ import com.shop.dto.request.OrderSearchRequest;
 import com.shop.dto.response.CommonResponse;
 import com.shop.dto.response.OrderResponse;
 import com.shop.dto.response.OrderStatisticsResponse;
+import com.shop.facade.OrderFacade;
 import com.shop.global.auth.Login;
 import com.shop.service.OrderService;
 import lombok.RequiredArgsConstructor;
@@ -26,10 +27,12 @@ import org.springframework.web.bind.annotation.RestController;
 public class OrderController {
 
     private final OrderService orderService;
+    private final OrderFacade orderFacade;
 
     @PostMapping
-    public void order(@Login String email, @RequestBody @Validated OrderCreateRequest request) {
-        orderService.order(email, request);
+    public CommonResponse<OrderResponse> order(@Login String email,
+                                               @RequestBody @Validated OrderCreateRequest request) {
+        return orderFacade.orderWithRedisson(email, request);
     }
 
     @PostMapping("/{orderId}/cancel")

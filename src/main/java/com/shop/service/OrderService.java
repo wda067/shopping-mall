@@ -11,8 +11,6 @@ import com.shop.dto.response.CommonResponse;
 import com.shop.dto.response.OrderResponse;
 import com.shop.dto.response.OrderStatisticsResponse;
 import com.shop.exception.MemberNotFound;
-import com.shop.exception.OrderError;
-import com.shop.exception.OrderLockFailed;
 import com.shop.exception.OrderMemberMismatch;
 import com.shop.exception.OrderNotFound;
 import com.shop.exception.ProductNotFound;
@@ -24,9 +22,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 import lombok.RequiredArgsConstructor;
-import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,15 +38,13 @@ import org.springframework.transaction.annotation.Transactional;
 public class OrderService {
 
     private static final Logger orderLogger = LoggerFactory.getLogger("OrderLogger");
-    private static final String LOCK_KEY = "order_lock";
 
     private final OrderRepository orderRepository;
     private final MemberRepository memberRepository;
     private final ProductRepository productRepository;
-    private final RedissonClient redissonClient;
     private final OrderStatsRepository orderStatsRepository;
 
-    public void order(String email, OrderCreateRequest request) {
+    public CommonResponse<OrderResponse> order(String email, OrderCreateRequest request) {
         Member member = memberRepository.findByEmail(email)
                 .orElseThrow(MemberNotFound::new);
         Product product = productRepository.findById(request.getProductId())
@@ -63,54 +57,13 @@ public class OrderService {
 
         Order order = new Order(member, orderProducts);
         orderRepository.save(order);
-        orderLogger.info("주문 성공");
-    }
+        orderLogger.info("주문 성공 orderId={}", order.getId());
 
-    public synchronized void orderWithSynchronized(String email, OrderCreateRequest request) {
-        Member member = memberRepository.findByEmail(email)
-                .orElseThrow(MemberNotFound::new);
-        Product product = productRepository.findById(request.getProductId())
-                .orElseThrow(ProductNotFound::new);
-        product.removeStock(request.getQuantity());
+        OrderResponse response = OrderResponse.builder()
+                .orderId(order.getId())
+                .build();
 
-        OrderProduct orderProduct = new OrderProduct(product, request.getQuantity());
-        List<OrderProduct> orderProducts = new ArrayList<>();
-        orderProducts.add(orderProduct);
-
-        Order order = new Order(member, orderProducts);
-        orderRepository.save(order);
-    }
-
-    public synchronized void orderWithRedisson(String email, OrderCreateRequest request) {
-        RLock lock = redissonClient.getLock(LOCK_KEY);
-
-        try {
-            if (lock.tryLock(5, 10, TimeUnit.SECONDS)) {
-                try {
-
-                    Member member = memberRepository.findByEmail(email)
-                            .orElseThrow(MemberNotFound::new);
-                    Product product = productRepository.findById(request.getProductId())
-                            .orElseThrow(ProductNotFound::new);
-                    product.removeStock(request.getQuantity());
-
-                    OrderProduct orderProduct = new OrderProduct(product, request.getQuantity());
-                    List<OrderProduct> orderProducts = new ArrayList<>();
-                    orderProducts.add(orderProduct);
-
-                    Order order = new Order(member, orderProducts);
-                    orderRepository.save(order);
-
-                } finally {
-                    lock.unlock();
-                }
-            } else {
-                throw new OrderLockFailed();
-            }
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            throw new OrderError();
-        }
+        return CommonResponse.success(response);
     }
 
     public void cancel(String email, Long orderId) {

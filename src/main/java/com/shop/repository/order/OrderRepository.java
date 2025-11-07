@@ -4,6 +4,7 @@ import com.shop.domain.order.Order;
 import com.shop.domain.order.OrderStatus;
 import com.shop.repository.order.dto.OrderStatisticsProjection;
 import java.time.LocalDateTime;
+import java.util.List;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -43,4 +44,16 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
                     + "HAVING SUM(o.total_amount) >= :minAmount) as stats",
             nativeQuery = true)
     Page<OrderStatisticsProjection> getOrdersStatistics(Long minAmount, Pageable pageable);
+
+    @Query("""
+            SELECT o.id
+            FROM Order o
+            WHERE o.status = com.shop.domain.order.OrderStatus.PAYMENT_PENDING
+              AND o.paymentKey IS NOT NULL
+              AND NOT EXISTS (
+                 SELECT 1 FROM Payment p
+                 WHERE p.order = o
+              )
+            """)
+    List<Long> findPaymentPendingOrdersWithoutPayment();
 }

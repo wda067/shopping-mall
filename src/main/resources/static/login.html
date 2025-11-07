@@ -168,6 +168,9 @@
         // 로그인 성공 시 팝업 띄우기
         if (response.ok) {
             document.getElementById('success-popup').style.display = 'flex';
+            setTimeout(() => {
+                window.location.href = '/products.html'; // 원하는 경로로 변경 가능
+            }, 1200);
         } else {
             alert('로그인 실패: 이메일 또는 비밀번호가 올바르지 않습니다.');
         }

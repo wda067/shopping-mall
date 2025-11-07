@@ -3,22 +3,20 @@ package com.shop.service;
 import com.shop.client.TossPaymentsClient;
 import com.shop.domain.member.Member;
 import com.shop.domain.order.Order;
-import com.shop.domain.payment.Payment;
 import com.shop.dto.request.PaymentRequest;
 import com.shop.dto.response.CommonResponse;
 import com.shop.dto.response.OrderPaymentInfo;
 import com.shop.dto.response.PaymentResponse;
 import com.shop.event.OrderEventPublisher;
+import com.shop.exception.CustomFeignException;
 import com.shop.exception.OrderNotFound;
-import com.shop.repository.order.OrderRepository;
 import com.shop.repository.PaymentRepository;
+import com.shop.repository.order.OrderRepository;
 import java.util.Base64;
-import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -29,6 +27,8 @@ public class PaymentService {
     private final PaymentRepository paymentRepository;
     private final OrderRepository orderRepository;
     private final TossPaymentsClient tossPaymentsClient;
+    private final PaymentTxService paymentTxService;
+    private final EmailService emailService;
     private final OrderEventPublisher orderEventPublisher;
 
     public OrderPaymentInfo getOrderPaymentInfo(Long orderId) {
@@ -40,33 +40,46 @@ public class PaymentService {
         return new OrderPaymentInfo(order, member);
     }
 
-    @Transactional
     public CommonResponse<PaymentResponse> confirmPayment(PaymentRequest request) {
-        orderLogger.info("결제 승인 요청");
-        PaymentResponse response = tossPaymentsClient.confirmPayment(request);
-        Order order = orderRepository.findById(decodeOrderId(response))
-                .orElseThrow(OrderNotFound::new);
+        long start = System.currentTimeMillis();
+        try {
+            orderLogger.info("========== [결제 승인 요청 시작] ==========");
 
-        Payment payment = new Payment(response, order);
-        paymentRepository.save(payment);
+            PaymentResponse response;
+            String message = "";
 
-        //주문 완료 이벤트 발행
-        orderEventPublisher.publishOrderCompleted(order);
-        orderLogger.info("주문 완료");
-        return CommonResponse.success(response);
+            //토스페이먼츠 API 요청
+            try {
+                response = tossPaymentsClient.confirmPayment(request);
+                paymentTxService.updateOrderPaymentKey(response);  //paymentKey 저장
+                orderLogger.info("토스페이먼츠 API 결제 요청 성공");
+            } catch (CustomFeignException e) {  //토스페이먼츠 API 요청 실패 -> 주문 취소
+                message = e.getMessage();
+                orderLogger.error("토스페이먼츠 API 결제 요청 실패: {}", e.getMessage());
+                paymentTxService.compensateOrder(decodeOrderId(request.getOrderId()));  //주문 취소
+                return CommonResponse.fail(e.getCode(), message);
+            }
+
+            //토스페이먼츠 API 요청 성공 -> 결제 성공
+            try {
+                paymentTxService.successPayment(response);  //주문 성공 & 결제 내역 저장
+                orderLogger.info("결제 성공");
+                return CommonResponse.success(response);
+            } catch (Exception e) {  //결제 내역 DB 저장 실패 -> 보정 필요
+                orderLogger.error("결제 내역 DB 저장 실패. 보정 필요: {}", e.getMessage());
+            }
+
+            return CommonResponse.success(response);
+        } finally {
+            long end = System.currentTimeMillis();
+            orderLogger.info("========== [결제 승인 요청 종료] 전체 처리 시간: {}ms ==========", (end - start));
+        }
     }
 
-    private Long decodeOrderId(PaymentResponse response) {
-        String cleaned = response.getOrderId().replaceAll("-", "");
+    private Long decodeOrderId(String orderId) {
+        String cleaned = orderId.replaceAll("-", "");
         byte[] decode = Base64.getDecoder().decode(cleaned);
         String rawOrderId = new String(decode);
         return Long.parseLong(rawOrderId);
-    }
-
-    @Transactional
-    public CommonResponse<List<PaymentResponse>> findAll() {
-        return CommonResponse.success(paymentRepository.findAll().stream()
-                .map(PaymentResponse::new)
-                .toList());
     }
 }

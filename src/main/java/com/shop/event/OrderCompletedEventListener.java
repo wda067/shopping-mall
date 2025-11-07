@@ -7,6 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
 
 @Component
@@ -17,8 +18,8 @@ public class OrderCompletedEventListener {
 
     private final EmailService emailService;
 
-    @Async("emailTaskExecutor")
-    @TransactionalEventListener
+    //@Async("emailTaskExecutor")
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void handleOrderCompletedEvent(OrderCompletedEvent event) {
         try {
             emailService.sendOrderConfirmation(event.getEmail(), event.getOrderName());

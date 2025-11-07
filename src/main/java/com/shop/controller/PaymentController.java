@@ -1,5 +1,6 @@
 package com.shop.controller;
 
+import com.shop.client.TossPaymentsClient;
 import com.shop.dto.request.PaymentRequest;
 import com.shop.dto.response.CommonResponse;
 import com.shop.dto.response.OrderPaymentInfo;
@@ -19,10 +20,10 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 @Controller
 @RequiredArgsConstructor
-@RequestMapping("/api")
 public class PaymentController {
 
     private final PaymentService paymentService;
+    private final TossPaymentsClient tossPaymentsClient;
 
     @GetMapping("/payment/widget/{orderId}")
     public String getPaymentWidget(@PathVariable Long orderId, Model model) {
@@ -32,7 +33,21 @@ public class PaymentController {
     }
 
     @ResponseBody
-    @PostMapping("/payment/confirm")
+    @GetMapping("/api/payment/orders/{orderId}")
+    public CommonResponse<PaymentResponse> getPayment(@PathVariable("orderId") String orderId) {
+        PaymentResponse payment = tossPaymentsClient.getPayment(orderId);
+        return CommonResponse.success(payment);
+    }
+
+    @ResponseBody
+    @GetMapping("/api/payment/{paymentKey}")
+    public CommonResponse<PaymentResponse> getPaymentByPaymentKey(@PathVariable("paymentKey") String paymentKey) {
+        PaymentResponse payment = tossPaymentsClient.getPaymentByPaymentKey(paymentKey);
+        return CommonResponse.success(payment);
+    }
+
+    @ResponseBody
+    @PostMapping("/api/payment/confirm")
     public CommonResponse<PaymentResponse> confirmPayment(@RequestBody PaymentRequest request) {
         return paymentService.confirmPayment(request);
     }
@@ -55,11 +70,5 @@ public class PaymentController {
         model.addAttribute("code", code);
         model.addAttribute("message", message);
         return "fail";
-    }
-
-    @ResponseBody
-    @GetMapping("/payments")
-    public CommonResponse<List<PaymentResponse>> findAllPayments() {
-        return paymentService.findAll();
     }
 }

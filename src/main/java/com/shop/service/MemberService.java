@@ -41,15 +41,15 @@ public class MemberService {
     }
 
     @Transactional
-    public void leave(Long memberId) {
-        Member member = memberRepository.findById(memberId)
+    public void leave(String email) {
+        Member member = memberRepository.findByEmail(email)
                 .orElseThrow(MemberNotFound::new);
 
         memberRepository.delete(member);
     }
 
-    public CommonResponse<MemberResponse> getMember(Long memberId) {
-        Member member = memberRepository.findById(memberId)
+    public CommonResponse<MemberResponse> getMember(String email) {
+        Member member = memberRepository.findByEmail(email)
                 .orElseThrow(MemberNotFound::new);
 
         return CommonResponse.success(new MemberResponse(member));

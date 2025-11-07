@@ -19,12 +19,15 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToOne;
+import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import java.time.LocalDateTime;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Entity
 @Getter
+@Table(uniqueConstraints = @UniqueConstraint(name="uk_payment_key", columnNames = "paymentKey"))
 @NoArgsConstructor(access = PROTECTED)
 public class Payment extends BaseTimeEntity {
 
@@ -68,5 +71,9 @@ public class Payment extends BaseTimeEntity {
     public void setOrder(Order order) {
         this.order = order;
         order.setPayment(this);
+    }
+
+    public void cancel() {
+        this.status = PaymentStatus.CANCELED;
     }
 }

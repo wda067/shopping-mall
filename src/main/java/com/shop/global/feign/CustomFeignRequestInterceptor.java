@@ -20,10 +20,10 @@ public class CustomFeignRequestInterceptor implements RequestInterceptor {
         String authHeader = "Basic " + Base64.getEncoder().encodeToString((widgetSecretKey + ":").getBytes(UTF_8));
         template.header("Authorization", authHeader);
         template.header("Content-Type", "application/json");
-        String requestId = MDC.get("requestId");
-        if (requestId != null) {
-            template.header("X-Request-Id", requestId);
-        }
+        //String requestId = MDC.get("requestId");
+        //if (requestId != null) {
+        //    template.header("X-Request-Id", requestId);
+        //}
         log.info("[Feign RequestInterceptor] Request Method: {}, URL: {}", template.method(), template.url());
     }
 }

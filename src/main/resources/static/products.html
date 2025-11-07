@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="utf-8" />
+    <title>상품 목록</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link href="/css/style.css" rel="stylesheet" />
+    <style>
+        body { font-family: Arial, sans-serif; margin:0; background:#f7f7f9; }
+        header { background:#111827; color:#fff; padding:16px 20px; font-weight:bold; }
+        .container { max-width: 1000px; margin:28px auto; padding:0 16px; }
+        .list { width:100%; border-collapse: collapse; background:#fff; box-shadow:0 6px 18px rgba(0,0,0,.06); border-radius:12px; overflow:hidden; }
+        .list th, .list td { padding:14px 12px; border-bottom:1px solid #e5e7eb; text-align:left; }
+        .list th { background:#f3f4f6; font-weight:700; color:#111827; }
+        .name { font-weight:700; color:#111827; }
+        .desc { color:#6b7280; font-size: 13px; }
+        .price { color:#2563eb; font-weight:700; }
+        .meta { color:#9ca3af; font-size:12px; }
+        .qty { width:96px; padding:8px; border:1px solid #e5e7eb; border-radius:8px; }
+        .btn { padding:10px 12px; border:none; border-radius:8px; cursor:pointer; font-weight:700; background:#0064FF; color:#fff; }
+        .btn:disabled { background:#9ca3af; cursor:not-allowed; }
+        .topbar { display:flex; gap:8px; justify-content:space-between; align-items:center; margin:12px 0; }
+        .pager { display:flex; flex-wrap:wrap; gap:6px; justify-content:center; margin:18px 0; }
+        .page-btn { padding:8px 12px; border:1px solid #e5e7eb; background:#fff; border-radius:8px; cursor:pointer; }
+        .page-btn[disabled], .page-btn.disabled { color:#9ca3af; cursor:not-allowed; }
+        .page-btn.active { background:#111827; color:#fff; border-color:#111827; }
+        .select { padding:6px 10px; border:1px solid #e5e7eb; border-radius:8px; }
+        .toast { position:fixed; right:20px; bottom:20px; background:#111827; color:#fff; padding:12px 14px; border-radius:8px; display:none; }
+        .right { text-align:right; }
+    </style>
+</head>
+<body>
+<header>상품 목록</header>
+
+<div class="container">
+    <div class="topbar">
+        <div>총 <span id="totalElements">0</span>개 · <span id="pageInfo">1 / 1</span></div>
+        <div>
+            <label for="size">페이지 크기</label>
+            <select id="size" class="select">
+                <option value="10">10개</option>
+                <option value="20">20개</option>
+                <option value="50">50개</option>
+            </select>
+        </div>
+    </div>
+
+    <table class="list">
+        <thead>
+        <tr>
+            <th style="width:28%">상품</th>
+            <th>설명</th>
+            <th style="width:12%">가격</th>
+            <th style="width:12%">재고/상태</th>
+            <th style="width:14%" class="right">수량</th>
+            <th style="width:14%">주문</th>
+        </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+    </table>
+
+    <div id="pager" class="pager"></div>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script>
+    const api = (path, opts={}) => fetch(path, { credentials: 'include', ...opts });
+    const fmt = (n) => new Intl.NumberFormat('ko-KR').format(n);
+
+    // --- 1-based 파라미터 ---
+    function buildListUrl(page, size) {
+        const u = new URL(location.href);
+        if (page != null) u.searchParams.set('page', String(page));   // 1-based
+        if (size != null) u.searchParams.set('size', String(size));
+        return '/api/product/list' + (u.search || '');
+    }
+
+    function getPageParams() {
+        const u = new URL(location.href);
+        const page = parseInt(u.searchParams.get('page') || '1', 10); // 기본 1
+        const size = parseInt(u.searchParams.get('size') || '10', 10);
+        return { page: isNaN(page) ? 1 : page, size: isNaN(size) ? 10 : size };
+    }
+
+    function updateUrl(page, size) {
+        const u = new URL(location.href);
+        if (page != null) u.searchParams.set('page', String(page));   // 1-based
+        if (size != null) u.searchParams.set('size', String(size));
+        history.pushState({}, '', u.toString());
+    }
+
+    function showToast(msg, ms = 1800) {
+        const t = document.getElementById('toast');
+        t.textContent = msg;
+        t.style.display = 'block';
+        setTimeout(() => (t.style.display = 'none'), ms);
+    }
+
+    async function loadProducts() {
+        const { page, size } = getPageParams();
+        document.getElementById('size').value = String(size);
+
+        const res = await api(buildListUrl(page, size));
+        if (!res.ok) { showToast('상품 목록을 불러오지 못했습니다.'); return; }
+
+        const data = await res.json();
+        const wrapped = data?.body ?? data;
+
+        const content = wrapped.content ?? [];
+        const meta = wrapped.page ?? wrapped; // page 객체가 없으면 기존 형태와 호환
+
+        const totalPages = meta.totalPages ?? 1;
+        const totalElements = meta.totalElements ?? content.length;
+        const currentUI = (meta.number != null ? meta.number + 1 : page); // 응답 number(0-base) → +1
+
+        document.getElementById('totalElements').textContent = fmt(totalElements);
+        document.getElementById('pageInfo').textContent = `${currentUI} / ${Math.max(1, totalPages)}`;
+
+        // 테이블 렌더링
+        const tbody = document.getElementById('tbody');
+        tbody.innerHTML = '';
+        content.forEach(p => {
+            const pid = p.productId ?? p.id;
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+        <td><div class="name">${p.name}</div></td>
+        <td><div class="desc">${p.description ?? ''}</div></td>
+        <td><div class="price">₩ ${fmt(p.price)}</div></td>
+        <td><div class="meta">재고 ${p.stockQuantity ?? 0} / ${p.sellStatus ?? ''}</div></td>
+        <td class="right"><input class="qty" type="number" min="1" step="1" value="1" /></td>
+        <td><button class="btn" data-action="order" data-id="${pid ?? ''}" ${pid ? '' : 'disabled'}>주문</button></td>
+      `;
+            tbody.appendChild(tr);
+        });
+
+        // 페이지네이션 렌더링 (1-based)
+        renderPager(currentUI, totalPages, meta.size ?? size);
+    }
+
+    function renderPager(currentUI, totalPages, size) {
+        const pager = document.getElementById('pager');
+        pager.innerHTML = '';
+        if (totalPages <= 1) return;
+
+        const addBtn = (label, page, disabled=false, active=false) => {
+            const btn = document.createElement('button');
+            btn.className = 'page-btn' + (active ? ' active' : '') + (disabled ? ' disabled' : '');
+            btn.textContent = label;
+            if (!disabled && !active) {
+                btn.addEventListener('click', () => {
+                    updateUrl(page, size);      // 1-based로 URL 업데이트
+                    loadProducts();
+                });
+            } else {
+                btn.disabled = true;
+            }
+            pager.appendChild(btn);
+        };
+
+        const first = 1;
+        const last = Math.max(1, totalPages);
+
+        addBtn('<<', first, currentUI === first);
+        addBtn('<', Math.max(first, currentUI - 1), currentUI === first);
+
+        // 숫자 버튼 윈도우(최대 5개)
+        const windowSize = 5;
+        let start = Math.max(first, currentUI - Math.floor(windowSize/2));
+        let end = start + windowSize - 1;
+        if (end > last) { end = last; start = Math.max(first, end - (windowSize - 1)); }
+
+        for (let p = start; p <= end; p++) {
+            addBtn(String(p), p, false, p === currentUI);
+        }
+
+        addBtn('>', Math.min(last, currentUI + 1), currentUI === last);
+        addBtn('>>', last, currentUI === last);
+    }
+
+    // 주문 버튼 → /order.html?productId=...&qty=...
+    document.addEventListener('click', (e) => {
+        const btn = e.target.closest('button[data-action="order"]');
+        if (!btn) return;
+        const productId = btn.getAttribute('data-id');
+        if (!productId) { showToast('상품 식별자가 없습니다.'); return; }
+        const row = btn.closest('tr');
+        const qtyInput = row.querySelector('input.qty');
+        let qty = parseInt(qtyInput?.value || '1', 10);
+        if (isNaN(qty) || qty < 1) qty = 1;
+
+        const url = new URL('/order.html', location.origin);
+        url.searchParams.set('productId', productId);
+        url.searchParams.set('qty', String(qty));
+        window.location.href = url.toString();
+    });
+
+    // 페이지 크기 변경 → 1페이지로
+    document.getElementById('size').addEventListener('change', (e) => {
+        const newSize = parseInt(e.target.value, 10) || 10;
+        updateUrl(1, newSize);   // 1-based 첫 페이지
+        loadProducts();
+    });
+
+    // 결제 완료 후 돌아왔을 때 토스트: /products.html?paid=1
+    const u = new URL(location.href);
+    if (u.searchParams.get('paid') === '1') {
+        showToast('결제가 완료되었습니다. 주문이 확정되었어요.');
+        u.searchParams.delete('paid');
+        history.replaceState({}, '', u.pathname + (u.search ? '?' + u.searchParams.toString() : ''));
+    }
+
+    // 뒤로가기 대응
+    window.addEventListener('popstate', loadProducts);
+
+    async function loadMember() {
+        const res = await api('/api/member/info');
+
+        if (res.status === 401 || res.status === 403) {
+            window.location.href = '/login.html';
+            return;
+        }
+
+        if (!res.ok) {
+            console.error('회원 정보를 불러오지 못했습니다.');
+            window.location.href = '/login.html';
+        }
+    }
+
+
+    // 최초 로드
+    loadMember();
+    loadProducts();
+</script>
+</body>
+</html>

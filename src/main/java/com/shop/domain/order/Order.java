@@ -1,5 +1,6 @@
 package com.shop.domain.order;
 
+import static com.shop.domain.order.OrderStatus.CANCELED;
 import static com.shop.domain.order.OrderStatus.COMPLETED;
 import static com.shop.domain.order.OrderStatus.PAYMENT_PENDING;
 
@@ -28,6 +29,7 @@ import java.util.UUID;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Entity
 @Table(name = "orders")
@@ -56,6 +58,9 @@ public class Order extends BaseTimeEntity {
 
     @OneToOne(mappedBy = "order")
     private Payment payment;
+
+    @Setter
+    private String paymentKey;
 
     @Enumerated(EnumType.STRING)
     private OrderStatus status;
@@ -101,6 +106,7 @@ public class Order extends BaseTimeEntity {
     public void setPayment(Payment payment) {
         this.payment = payment;
         this.status = COMPLETED;
+        this.paymentKey = payment.getPaymentKey();
     }
 
     //public String getOrderName() {

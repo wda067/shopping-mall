@@ -77,7 +77,7 @@ class MemberServiceTest {
         memberRepository.save(member);
 
         //when
-        memberService.leave(member.getId());
+        memberService.leave(member.getEmail());
 
         //then
         assertEquals(0, memberRepository.count());

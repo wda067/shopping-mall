@@ -23,6 +23,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.domain.Page;
 
 @Slf4j
 @SpringBootTest
@@ -100,8 +101,8 @@ class ProductServiceTest {
         productSearch.setSize(5);
 
         //when
-        CommonResponse<List<ProductResponse>> response = productService.getList(productSearch);
-        List<ProductResponse> productResponses = response.getBody();
+        CommonResponse<Page<ProductResponse>> response = productService.getList(productSearch);
+        List<ProductResponse> productResponses = response.getBody().getContent();
 
         //then
         assertEquals(5, productResponses.size());

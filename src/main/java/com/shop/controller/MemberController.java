@@ -29,13 +29,13 @@ public class MemberController {
     }
 
     @PostMapping("/member/leave")
-    public void leave(@Login Long memberId) {
-        memberService.leave(memberId);
+    public void leave(@Login String email) {
+        memberService.leave(email);
     }
 
     @GetMapping("/member/info")
-    public CommonResponse<MemberResponse> get(@Login Long memberId) {
-        return memberService.getMember(memberId);
+    public CommonResponse<MemberResponse> get(@Login String email) {
+        return memberService.getMember(email);
     }
 
     @GetMapping("/members")
