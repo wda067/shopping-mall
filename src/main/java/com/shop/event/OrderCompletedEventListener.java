@@ -18,7 +18,7 @@ public class OrderCompletedEventListener {
 
     private final EmailService emailService;
 
-    //@Async("emailTaskExecutor")
+    @Async("emailTaskExecutor")
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void handleOrderCompletedEvent(OrderCompletedEvent event) {
         try {
